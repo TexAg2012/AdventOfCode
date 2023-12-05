@@ -1,5 +1,4 @@
 import re
-import numpy as np
 
 Data = """......124..................418.......587......770...........672.................564............................438..........512......653....
 665/...*......................*599.....*.983......794*..140..*...........@..963*....................445........*......*.........709.....*...
@@ -142,7 +141,7 @@ Data = """......124..................418.......587......770...........672.......
 ......*.....81.....*.....636.......317...*...................899.............*....*698............626....................-..+..@.......*....
 .......877......256.714...................825.........458....................869..............................54............28.823..110....."""
 
-Data = """467..114..
+Data2 = """467..114..
 ...*....23
 ..35..633.
 ......#...
@@ -153,6 +152,10 @@ Data = """467..114..
 ...$.*....
 .664.598.."""
 
+Data2 = """......124..................418.......587......770...........672.................564............................438..........512......653....
+        665/...*......................*599.....*.983......794*..140..*...........@..963*....................445........*......*.........709.....*...
+        .......246.....581......701..........108....%.532........../.73..699...927............................*....579.354.464..............298..86."""
+
 DataSplit = Data.split("\n")
 
 runSum = 0
@@ -160,21 +163,65 @@ runSum = 0
 for i in range(len(DataSplit)):
     d = DataSplit[i]
 
-    nums = re.findall("\d+",d)
-    for n in nums:
-        box = (DataSplit[max(0,i-1)][max(0,d.index(n)-1):min(len(d),d.index(n)+len(n))+1] + '\n' +
-               DataSplit[i][max(0,d.index(n)-1):min(len(d),d.index(n)+len(n))+1] + '\n' +
-               DataSplit[min(i+1,len(DataSplit)-1)][max(0,d.index(n)-1):min(len(d),d.index(n)+len(n))+1])
-
-        print('Line: /n', box)
+    iters = re.finditer(r"\d+",d) #need to use finditer to get index as well as match, findall struggled with single digits
+    
+    for num in iters:
+        n = d[num.span()[0]:num.span()[1]] # identify the actual string
         
-        #if len(re.findall('[@_!#$%^&*()<>?/\|}{~:\+\-\=`]',box))>0:
+        #Create box that includes all adjacent points
+        box = (DataSplit[max(0,i-1)][max(0,num.span()[0]-1):min(len(d),num.span()[0]+len(n))+1] +
+               DataSplit[i][max(0,num.span()[0]-1):min(len(d),num.span()[0]+len(n))+1] +
+               DataSplit[min(i+1,len(DataSplit)-1)][max(0,num.span()[0]-1):min(len(d),num.span()[0]+len(n))+1])
+
+        #Check if there are any symbols that are not '.' or a digit and sum
         if len(re.findall('\.|\d',box)) < len(box):
             runSum += int(n)
-            #print(n)
 
 print('Part one answer: ', runSum)
 
 ###Part Two###
+gearSum = 0
 
+for i in range(len(DataSplit)):
+    d = DataSplit[i]
+
+    iters = re.finditer(r"\*",d) #need to use finditer to get index as well as match, findall struggled with single digits
+    for num in iters:
+        if i > 0:
+            iterNums0 = re.finditer(r"\d+",DataSplit[max(0,i-1)]) #first line
+        else:
+            iterNums0 = re.finditer(r"\d+",'foobar')
+
+        iterNums1 = re.finditer(r"\d+",d) #first line
+
+        if i == len(DataSplit)-1:
+            iterNums2 = re.finditer(r"\d+",'foobar')
+        else:
+            iterNums2 = re.finditer(r"\d+",DataSplit[min(i+1,len(DataSplit)-1)]) #last line
+
+        starRange = range(num.span()[0]-1,num.span()[1]+1)
         
+        gearRatio = 1
+        gearCount = 0
+        
+        for number in iterNums0:
+            if number.span()[0] in starRange or number.span()[1]-1 in starRange:
+                gearRatio *= int(DataSplit[i-1][number.span()[0]:number.span()[1]])
+                gearCount += 1
+        for number1 in iterNums1:
+            if number1.span()[0] in starRange or number1.span()[1]-1 in starRange:
+                gearRatio *= int(d[number1.span()[0]:number1.span()[1]])
+                gearCount += 1
+        for number2 in iterNums2:
+            if number2.span()[0] in starRange or number2.span()[1]-1 in starRange:
+                gearRatio *= int(DataSplit[i+1][number2.span()[0]:number2.span()[1]])
+                gearCount += 1
+
+        if gearCount > 1:
+            gearSum += gearRatio
+        if gearCount > 2:
+            print('Exceeded gear count with: ', gearCount)
+
+        print(gearCount,gearRatio)
+        
+print('Part two answer: ', gearSum)
