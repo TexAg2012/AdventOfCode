@@ -209,7 +209,7 @@ Card 206: 97 64 23  8 74 63 32 27 40 67 | 96 93 59 16 37 48 53  9 54 82 79 39 85
 Card 207: 61  4 59 62 99 32 36 11  7  5 | 54 95 25 60 46 50  1 38 32 39 93 79 49 67 57 73 87 77 45 33 16 55 75 58 82
 Card 208: 22 12 64  5 63 62 72 86 49 47 | 17 35 69 33 68 67 78 82 14 61 70 95  3 40 71 91 43 75 44  6 58  9 30  8 66"""
 
-Data = """Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
+DataSample = """Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
 Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19
 Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1
 Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83
@@ -236,7 +236,8 @@ print('Part one answer: ', runSum)
 
 ###Part Two###
 row = 0
-cards = {}
+cardCount = [1] * len(DataSplit) #initially there is one of each card
+disCards = 0
 
 for i in range(len(DataSplit)):
     d = DataSplit[i]
@@ -246,12 +247,22 @@ for i in range(len(DataSplit)):
     #Convert double space to space0
     results = results.split(' | ')
     
-
+    #Get count of wins in that row
     for win in results[1].split(' '):
         rowCount += (win in results[0].split(' '))
 
-    if rowCount > 1:
-        print(range(i+1,i+rowCount))
-    elif rowCount > 0:
-        print(i+1)
+    #Create range of winning cards below
+    for card in range(i+1,i+rowCount+1):
+        #add number to lower cards based on count of current cards
+        cardCount[card] += cardCount[i] 
+
+    #DisCard the scratch offs (Or keep them in a pile to get more scratchers later)
+    disCards += cardCount[i]
+    cardCount[i] = 0
+    
+#Confirm all cards have reached 0
+if max(cardCount) == 0:
+    print('Part two answer: ', disCards)
+else:
+    print(cardCount)
     
